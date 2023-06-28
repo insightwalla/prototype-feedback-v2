@@ -34,11 +34,21 @@ options_for_classification = [
 # instead of using this We are going to read form the db
 
 from database import DBAmbienceKeywords, DBServiceKeywords, DBProductKeywords, DBDrinks, DBMenu
+menu_items_lookup = DBMenu().view(as_df=True)
+menu_items_lookup = menu_items_lookup['name'].tolist()
 
-menu_items_lookup = DBMenu().view(as_df=True)['name'].tolist()
-drink_items_lookup = DBDrinks().view(as_df=True)['name'].tolist()
-service_keywords = DBServiceKeywords().view(as_df=True)['name'].tolist()
-key_words_related_to_ambience = DBAmbienceKeywords().view(as_df=True)['name'].tolist()
-food_keywords = DBProductKeywords().view(as_df=True)['name'].tolist()
+drink_items_lookup = DBDrinks().view(as_df=True)
+drink_items_lookup = drink_items_lookup['name'].tolist()
+
+service_keywords = DBServiceKeywords().view(as_df=True)
+service_keywords = service_keywords['name'].tolist()
+
+key_words_related_to_ambience = DBAmbienceKeywords().view(as_df=True)
+key_words_related_to_ambience = key_words_related_to_ambience['name'].tolist()
+
+food_keywords = DBProductKeywords().view(as_df=True)
+food_keywords = food_keywords['name'].tolist()
 
 keywords = service_keywords + key_words_related_to_ambience + food_keywords
+
+

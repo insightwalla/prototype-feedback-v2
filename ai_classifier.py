@@ -5,14 +5,9 @@ We should rename it to entry_point.py in the future
 '''
 from transformers import pipeline
 from utils import *
-
 from database import DBAmbienceKeywords, DBServiceKeywords, DBProductKeywords, DBDrinks, DBMenu
 
-menu_items_lookup = DBMenu().view(as_df=True)['name'].tolist()
-drink_items_lookup = DBDrinks().view(as_df=True)['name'].tolist()
-service_keywords = DBServiceKeywords().view(as_df=True)['name'].tolist()
-key_words_related_to_ambience = DBAmbienceKeywords().view(as_df=True)['name'].tolist()
-food_keywords = DBProductKeywords().view(as_df=True)['name'].tolist()
+
 
 keywords = service_keywords + key_words_related_to_ambience + food_keywords
 
@@ -37,11 +32,23 @@ class ArtificialWalla:
         self.review = None
         self.sentiment = None
         self.confidence = None
+        menu_items_lookup = DBMenu().view(as_df=True)
+        menu_items_lookup = menu_items_lookup['name'].tolist()
+
+        drink_items_lookup = DBDrinks().view(as_df=True)
+        drink_items_lookup = drink_items_lookup['name'].tolist()
+
+        service_keywords = DBServiceKeywords().view(as_df=True)
+        service_keywords = service_keywords['name'].tolist()
+
+        key_words_related_to_ambience = DBAmbienceKeywords().view(as_df=True)
+        key_words_related_to_ambience = key_words_related_to_ambience['name'].tolist()
+
+        food_keywords = DBProductKeywords().view(as_df=True)
+        food_keywords = food_keywords['name'].tolist()
         
         self.keywords_lookup = keywords
-
         self.menu_items_lookup = menu_items_lookup
-
         self.drink_items_lookup = drink_items_lookup
 
 

@@ -10,7 +10,7 @@ def get_data_from_database(db_manager: Database_Manager):
         st.stop()
     return df
 
-def final_view(name_db, section = ''):
+def final_view(name_db, section = '', name_user = ''):
     '''
     This section will show a view that makes easy to choose the best and worst reviews
     '''

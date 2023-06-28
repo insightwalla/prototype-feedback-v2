@@ -5,8 +5,6 @@ from parameters import *
 from graphs import *
 from database import Database_Manager, DBAmbienceKeywords, DBDrinks, DBMenu, DBProductKeywords, DBServiceKeywords
 from ai_classifier import ArtificialWalla
-import time
-
 
 # DB connection
 def fetch_data_from_db(name = 'pages/reviews.db'):
@@ -138,7 +136,7 @@ def create_data_from_uploaded_file():
       # add the direct feedback file
       if len(direct_feedback) == 1:
          df = process_direct_feedback(direct_feedback, df)
-         st.write(df)
+         #st.write(df)
 
 
       # Dividing the data into two dfs:  one with empty details and one with not empty details
@@ -163,7 +161,8 @@ class FeedBackHelper:
     '''
     This class will create the main application interface
     '''
-    def __init__(self, db_name):
+    def __init__(self, db_name, name_user):
+        self.name_user = name_user
         self.walla =  ArtificialWalla()
         self.title = 'Feedback Reviewer'
         self.db_name = db_name
@@ -219,7 +218,6 @@ class FeedBackHelper:
          data.loc[index, 'Keywords'] = ' '.join(keywords_)
          data.loc[index, 'Drink Item'] = ' '.join(drinks_items)
 
-
       return data
    
     def process_data(self, df):
@@ -237,7 +235,9 @@ class FeedBackHelper:
 
       final = self.to_plot
       container_keywords = st.sidebar.container()
+
       create_timeseries_graph(final, self.main_c)
+
       create_graph_keywords_as_a_whole(final, container = container_keywords)
 
       create_pie_chart(final)
@@ -340,7 +340,6 @@ class FeedBackHelper:
       if key_words != []:
          self.df_with_review = self.df_with_review[self.df_with_review['Keywords'].str.contains('|'.join(key_words), case=False)]
 
-
       with st.expander(f'Empty Feedbacks: {len(self.df_without_review)}', expanded=False):
          create_graphs_no_rev(self.df_without_review)
 
@@ -362,26 +361,23 @@ class FeedBackHelper:
       if month != []:
          self.df_with_review = self.df_with_review[self.df_with_review['Month'].str.contains('|'.join(month), case=False)]
 
-
       # 8. Show the dataframe with review
       # use sentiment to modify the checkbox
       self.to_plot = self.df_with_review
 
       #st.write(self.to_plot)
-
-
       # 9. Save to database or delete all data from database
       if start_date == min_date and end_date == max_date and search_bar == '' and month == [] and day_of_the_week == [] and day_part == [] and key_words == [] and restaurant_name != 'All':
          c1,c2 = st.sidebar.columns(2)
          
-         button_delete_all = c2.button('Delete')
          button_save_all = c1.button('Save')
-
-
-         if button_delete_all:
-            db_single_res = Database_Manager(name_choosen_db)
-            db_single_res.delete_all()
-            st.info('Deleted all data from database')
+         
+         if self.name_user == 'AllEars':
+            button_delete_all = c2.button('Delete')
+            if button_delete_all:
+               db_single_res = Database_Manager(name_choosen_db)
+               db_single_res.delete_all()
+               st.info('Deleted all data from database')
 
          if button_save_all:
             self.to_plot = pd.concat([self.to_plot, self.df_without_review])
@@ -391,7 +387,7 @@ class FeedBackHelper:
             st.success('Saved all data to database')
             # update container
             
-      elif start_date == min_date and end_date == max_date and search_bar == '' and month == [] and day_of_the_week == [] and day_part == [] and key_words == [] and restaurant_name == 'All':
+      elif start_date == min_date and end_date == max_date and search_bar == '' and month == [] and day_of_the_week == [] and day_part == [] and key_words == [] and restaurant_name == 'All' and self.name_user == 'AllEars':
          button_delete_everything = st.sidebar.button('Delete All')
          if button_delete_everything:
 
@@ -417,11 +413,15 @@ class FeedBackHelper:
          date = row['date_for_filter']
          venue = row['Reservation: Venue']
          time  = row['Reservation: Time']
+         # get day part
+         day_part = row['Day_Part']
+         st.write(f'**Day Part**: {day_part}')
          suggestion = row['Suggested to Friend']
          rev = row['Details']
          is_favorite = row['👍'] == '1'
          is_not_favorite = row['👎'] == '1'
          is_suggestion = row['💡'] == '1'
+         label = row['Label: Dishoom']
 
          c1,c2,c3, c4 = st.columns(4)
 
@@ -433,22 +433,34 @@ class FeedBackHelper:
 
          c4.write(f'**Suggested to Friend**: {suggestion}')
 
+         # split at the - and get the first part
+         # get index from label if there is one
+         if label == '':
+            index_label = ['']
+         else:
+            label = label.split('-')
+            # strip by removing spaces
+            label = [l.strip() for l in label]
+
+         #st.write(f'**Label**: {label}')
+
          st.write(f'{rev}')
+         # gear icon is this ⚙️
 
          col1, col2, col3, col4 = st.columns(4)
          # get sentiment 
          sentiment = row['Sentiment']
          options = ['POSITIVE', 'NEGATIVE', 'neutral']
          index = options.index(sentiment)
-         select_sentiment =  col1.selectbox('Sentiment', ['POSITIVE', 'NEGATIVE', 'neutral'], index = index, key = f'i_{index_to_modify}')
+         select_sentiment =  col1.selectbox('Sentiment', ['POSITIVE', 'NEGATIVE', 'neutral'], index = index, key = f'i_{index_to_modify}', help = 'Select the sentiment for the review')
 
+         select_thumbs_up = col2.checkbox('👍', value = is_favorite, key = f't_u {index_to_modify}', help = 'Save as one of the Best Reviews')
 
-         select_thumbs_up = col2.checkbox('👍', value = is_favorite, key = f't_u {index_to_modify}')
+         select_thumbs_down = col3.checkbox('👎', value = is_not_favorite, key = f't_d {index_to_modify}', help = 'Save as one of the Worst Reviews')
 
-         select_thumbs_down = col3.checkbox('👎', value = is_not_favorite, key = f't_d {index_to_modify}')
+         select_suggestion = col4.checkbox('💡', value = is_suggestion, key = f't_s {index_to_modify}', help = 'Save as customer Suggestion')
 
-         select_suggestion = col4.checkbox('💡', value = is_suggestion, key = f't_s {index_to_modify}')
-
+         select_label = st.multiselect('Label', options_for_classification, default = label, key = f'l {index_to_modify}', help = 'Select the label for the review')
          columns_rating = ['Overall Rating', 'Feedback: Food Rating', 'Feedback: Drink Rating', 'Feedback: Service Rating', 'Feedback: Ambience Rating']
 
          columns_for_input = ['Overall', 'Food', 'Drink', 'Service', 'Ambience']
@@ -489,6 +501,10 @@ class FeedBackHelper:
                db.modify_thumbs_down_in_db(rev, select_thumbs_down)
 
                db.modify_is_suggestion(rev, select_suggestion)
+               # modify label
+               # modify label before saving
+               select_label = '-'.join(select_label)
+               db.modify_label_in_db(rev, select_label)
 
                st.success('Saved')
                # add +1 to the index

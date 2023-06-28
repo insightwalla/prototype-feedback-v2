@@ -41,7 +41,7 @@ def UI():
 
 # MAIN PAGE
 class SectionTemplate:
-    def __init__(self, name_db = 'pages/details.db', section = 'Product'):
+    def __init__(self, name_db = 'pages/details.db', section = 'Product', name_user = ''):
         self.name_db = name_db
         self.section = section
         self.data = get_data_from_database(Database_Manager(name_db))

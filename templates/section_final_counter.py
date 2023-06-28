@@ -1,7 +1,7 @@
 from utils import *
 from graphs import *
 
-def final_page(name_db: str, section: str):
+def final_page(name_db: str, section: str, name_user: str):
     st.write('Final page')
 
     # need to get the data for each restaurant
