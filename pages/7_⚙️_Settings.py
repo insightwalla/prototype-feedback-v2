@@ -194,8 +194,9 @@ if __name__ == '__main__':
     db_service_key_words = DBServiceKeywords()
     db_ambience = DBAmbienceKeywords()
 
+    col_food, col_drinks = st.columns(2)
 
-    c1,c2,c3 = st.columns(3)
+    c1,c2,c3 = col_food.columns(3)
     button_delete = c2.button('Delete all')
     if button_delete:
         db_menu_food.delete_all()
@@ -205,8 +206,7 @@ if __name__ == '__main__':
         db_menu_food.delete_all()
         db_menu_food.populate_db(menu_items_lookup)
 
-    col_food, col_drinks = st.columns(2)
-    menu = col_food.experimental_data_editor(db_menu_food.view(as_df=True), num_rows='dynamic', use_container_width=True)
+    menu = col_food.data_editor(db_menu_food.view(as_df=True), num_rows='dynamic', use_container_width=True)
 
     button_save = c3.button('Save')
     if button_save:
@@ -219,7 +219,7 @@ if __name__ == '__main__':
 
     # drinks
 
-    c1,c2,c3 = st.columns(3)
+    c1,c2,c3 = col_drinks.columns(3)
     button_delete = c2.button('Delete all (drinks)')
     if button_delete:
         db_drinks_menu.delete_all()
@@ -230,7 +230,7 @@ if __name__ == '__main__':
         db_drinks_menu.populate_db(drink_items_lookup)
 
 
-    menu_drinks = col_drinks.experimental_data_editor(db_drinks_menu.view(as_df=True), num_rows='dynamic', use_container_width=True)
+    menu_drinks = col_drinks.data_editor(db_drinks_menu.view(as_df=True), num_rows='dynamic', use_container_width=True)
 
     button_save = c3.button('Save (drinks)')
     if button_save:
@@ -255,7 +255,7 @@ if __name__ == '__main__':
         db_product_keywords.populate_db(food_keywords)
 
 
-    menu_product_keywords = st.experimental_data_editor(db_product_keywords.view(as_df=True), num_rows='dynamic', use_container_width=True)
+    menu_product_keywords = st.data_editor(db_product_keywords.view(as_df=True), num_rows='dynamic', use_container_width=True)
     button_save = c3.button('Save (product keywords)')
 
     if button_save:
@@ -278,7 +278,7 @@ if __name__ == '__main__':
         db_service_key_words.populate_db(service_keywords)
 
 
-    menu_service_keywords = st.experimental_data_editor(db_service_key_words.view(as_df=True), num_rows='dynamic', use_container_width=True)
+    menu_service_keywords = st.data_editor(db_service_key_words.view(as_df=True), num_rows='dynamic', use_container_width=True)
 
     button_save = c3.button('Save (service keywords)')
     if button_save:
@@ -301,7 +301,7 @@ if __name__ == '__main__':
         db_ambience.populate_db(key_words_related_to_ambience)
 
 
-    menu_ambience_keywords = st.experimental_data_editor(db_ambience.view(as_df=True), num_rows='dynamic', use_container_width=True)
+    menu_ambience_keywords = st.data_editor(db_ambience.view(as_df=True), num_rows='dynamic', use_container_width=True)
 
     button_save = c3.button('Save (ambience keywords)')
 

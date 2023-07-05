@@ -498,6 +498,27 @@ class Database_Manager:
          self.cur.execute(sql, (is_suggestion, review))
          self.conn.commit()
 
+   def modify_details_in_db(self, original_review, review_new):
+         
+         sql = "UPDATE reviews SET details = ? WHERE details = ?"
+         self.cur.execute(sql, (review_new, original_review))
+         self.conn.commit()
+
+   def modify_confidence_in_db(self, review, confidence):
+            sql = "UPDATE reviews SET confidence = ? WHERE details = ?"
+            self.cur.execute(sql, (confidence, review))
+            self.conn.commit()
+
+   def modify_keywords_in_db(self, review, keywords):
+            sql = "UPDATE reviews SET keywords = ? WHERE details = ?"
+            self.cur.execute(sql, (keywords, review))
+            self.conn.commit()
+   def get_number_of_thumbs_up(self, restaurant):
+      return self.run_query(f"SELECT COUNT(👍) FROM reviews WHERE 👍 = '1' AND reservation_venue = '{restaurant}'")[0][0]
+   
+   def get_number_of_thumbs_down(self, restaurant):
+      return self.run_query(f"SELECT COUNT(👎) FROM reviews WHERE 👎 = '1' AND reservation_venue = '{restaurant}'")[0][0]
+   
 if __name__ == "__main__":
    db = Database_Manager('/Users/robertoscalas/Desktop/demo_working_version/pages/reviews.db')
    db.delete_Table()

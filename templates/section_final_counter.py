@@ -27,16 +27,19 @@ def final_page(name_db: str, section: str, name_user: str):
 
         # get suggestions 
         suggestions = venue_data[venue_data['💡'] == '1']
-
+        number_of_thumbs_up = len(thumbs_up)
+        number_of_thumbs_down = len(thumbs_down)
+        
+        
         try:
-            message = venue + f' - {tot_done}/{tot_} ({round(tot_done/tot_*100, 2)}%)'
+            message = venue + f' - Reviews {tot_done}/{tot_} (**{round(tot_done/tot_*100, 2)}%** - 👍 {number_of_thumbs_up}/3 - 👎{number_of_thumbs_down}/3)' 
         except:
             message = venue
         with st.expander(message):
           
             # now create a pie chart
             fig = go.Figure(data=[go.Pie(labels=['Done', 'Not Done'], values=[tot_done, tot_not_done])])
-            fig.update_layout(title_text=message)
+            fig.update_layout(title_text=venue)
             # green for done, red for not done
             fig.update_traces(marker_colors=['green', 'red'])
             # set opacity
