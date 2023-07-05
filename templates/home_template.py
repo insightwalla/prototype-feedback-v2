@@ -5,6 +5,7 @@ from parameters import *
 from graphs import *
 from database import Database_Manager, DBAmbienceKeywords, DBDrinks, DBMenu, DBProductKeywords, DBServiceKeywords
 from ai_classifier import ArtificialWalla
+from translator_walla import Translator
 
 # DB connection
 def fetch_data_from_db(name = 'pages/reviews.db'):
@@ -164,6 +165,7 @@ class FeedBackHelper:
     def __init__(self, db_name, name_user):
         self.name_user = name_user
         self.walla =  ArtificialWalla()
+        self.translator = Translator()
         self.title = 'Feedback Reviewer'
         self.db_name = db_name
         db = Database_Manager(self.db_name)
@@ -361,6 +363,15 @@ class FeedBackHelper:
       if month != []:
          self.df_with_review = self.df_with_review[self.df_with_review['Month'].str.contains('|'.join(month), case=False)]
 
+      #7.5 Filter by Negative, Neutral, Positive
+      sentiment_to_consider = expander_filters.multiselect('Sentiment', ['POSITIVE', 'NEGATIVE', 'neutral'], default = [])
+      if sentiment_to_consider != []:
+         self.df_with_review = self.df_with_review[self.df_with_review['Sentiment'].str.contains('|'.join(sentiment_to_consider), case=False)]
+      
+      #7.6 Filter by negative and empty labels
+      if st.sidebar.checkbox('Only Reviews That Needs a Label', value = False, key = 'negative and empty labels'):
+         self.df_with_review = self.df_with_review[(self.df_with_review['Sentiment'] == 'NEGATIVE') & (self.df_with_review['Label: Dishoom'] == '')]
+
       # 8. Show the dataframe with review
       # use sentiment to modify the checkbox
       self.to_plot = self.df_with_review
@@ -415,57 +426,80 @@ class FeedBackHelper:
          time  = row['Reservation: Time']
          # get day part
          day_part = row['Day_Part']
-         st.write(f'**Day Part**: {day_part}')
          suggestion = row['Suggested to Friend']
-         rev = row['Details']
+
+         if st.checkbox('Translate to English', value = False, key = f'translate {index_to_modify}'):
+            rev_original = row['Details']
+            rev_in_eng = self.translator.translate(rev_original)
+            rev = rev_in_eng
+            if st.button('Save in English language'):
+               db = Database_Manager(self.db_name)
+               db.modify_details_in_db(rev_original, rev_in_eng)
+               # get restaurant name
+               restaurant_name = row['Reservation: Venue']
+               name_choosen_db = 'pages/' + restaurant_name + '.db'
+               db = Database_Manager(name_choosen_db)
+               db.modify_details_in_db(rev_original, rev_in_eng)
+               all_data = self.walla.classify_review(rev_in_eng)
+               sentiment = all_data[0]
+               confidence = all_data[1]
+               menu_items = all_data[2]
+               keywords_ = all_data[3]
+               drinks_items = all_data[4]
+               db.modify_sentiment_in_db(rev_in_eng, sentiment)
+               db.modify_confidence_in_db(rev_in_eng, confidence)
+               db.modify_food_in_db(rev_in_eng, ' '.join(menu_items))
+               db.modify_keywords_in_db(rev_in_eng, ' '.join(keywords_))
+               db.modify_drink_in_db(rev_in_eng, ' '.join(drinks_items))
+               st.success('Saved')
+
+         else:
+            rev = row['Details']
+
          is_favorite = row['👍'] == '1'
          is_not_favorite = row['👎'] == '1'
          is_suggestion = row['💡'] == '1'
          label = row['Label: Dishoom']
 
-         c1,c2,c3, c4 = st.columns(4)
+         c1,c2,c3, c4, c5 = st.columns(5)
 
          c1.write(f'**Venue**: {venue}')
-
          c2.write(f'**Date**: {date}')
-
          c3.write(f'**Time**: {time}')
-
-         c4.write(f'**Suggested to Friend**: {suggestion}')
+         c4.write(f'**Day Part**: {day_part}')
+         c5.write(f'**Suggested to Friend**: {suggestion}')
 
          # split at the - and get the first part
          # get index from label if there is one
-         if label == '':
-            index_label = ['']
+         if label == '' or label == ' ':
+            label = []
          else:
             label = label.split('-')
             # strip by removing spaces
             label = [l.strip() for l in label]
 
-         #st.write(f'**Label**: {label}')
+         st.write('---')
 
-         st.write(f'{rev}')
-         # gear icon is this ⚙️
-
-         col1, col2, col3, col4 = st.columns(4)
-         # get sentiment 
          sentiment = row['Sentiment']
          options = ['POSITIVE', 'NEGATIVE', 'neutral']
          index = options.index(sentiment)
-         select_sentiment =  col1.selectbox('Sentiment', ['POSITIVE', 'NEGATIVE', 'neutral'], index = index, key = f'i_{index_to_modify}', help = 'Select the sentiment for the review')
+         col1, col2, col3 = st.columns(3)
 
-         select_thumbs_up = col2.checkbox('👍', value = is_favorite, key = f't_u {index_to_modify}', help = 'Save as one of the Best Reviews')
+         select_thumbs_up = col1.checkbox('👍', value = is_favorite, key = f't_u {index_to_modify}', help = 'Save as one of the Best Reviews')
+         select_thumbs_down = col2.checkbox('👎', value = is_not_favorite, key = f't_d {index_to_modify}', help = 'Save as one of the Worst Reviews')
+         select_suggestion = col3.checkbox('💡', value = is_suggestion, key = f't_s {index_to_modify}', help = 'Save as customer Suggestion')
+         
+         #st.write(f'**Label**: {label}')
+         st.write('---')
+         st.write(f'{rev}')
 
-         select_thumbs_down = col3.checkbox('👎', value = is_not_favorite, key = f't_d {index_to_modify}', help = 'Save as one of the Worst Reviews')
-
-         select_suggestion = col4.checkbox('💡', value = is_suggestion, key = f't_s {index_to_modify}', help = 'Save as customer Suggestion')
-
-         select_label = st.multiselect('Label', options_for_classification, default = label, key = f'l {index_to_modify}', help = 'Select the label for the review')
+         c1,c2 = st.columns(2)
+         select_sentiment =  c1.selectbox('Sentiment', ['POSITIVE', 'NEGATIVE', 'neutral'], index = index, key = f'i_{index_to_modify}', help = 'Select the sentiment for the review')
+         select_label = c2.multiselect('Label', options_for_classification, default = label, key = f'l {rev}', help = 'Select the label for the review')
          columns_rating = ['Overall Rating', 'Feedback: Food Rating', 'Feedback: Drink Rating', 'Feedback: Service Rating', 'Feedback: Ambience Rating']
 
          columns_for_input = ['Overall', 'Food', 'Drink', 'Service', 'Ambience']
          columns_ = st.columns(len(columns_rating))
-
 
          results = []
          for i, col in enumerate(columns_rating):
@@ -497,30 +531,30 @@ class FeedBackHelper:
                db.modify_ambience_rating_in_db(rev, results[4])
                db.modify_sentiment_in_db(rev, select_sentiment)
 
+               # we can have a max of 3 thumbs up and 3 thumbs down
+               # get restaurant name
+
+               restaurant_name = row['Reservation: Venue']
+               number_of_thumbs_up_in_res = db.get_number_of_thumbs_up(restaurant_name)
+               number_of_thumbs_down_in_res = db.get_number_of_thumbs_down(restaurant_name)
+               st.write(f'**Number of thumbs up in {restaurant_name}**: {number_of_thumbs_up_in_res}')
+               st.write(f'**Number of thumbs down in {restaurant_name}**: {number_of_thumbs_down_in_res}')
+               
+               if number_of_thumbs_down_in_res + 1 > 3 and select_thumbs_down:
+                  st.info('You have reached the maximum number of thumbs down for this restaurant')
+                  select_thumbs_down = False
+                  st.stop()
+               if number_of_thumbs_up_in_res + 1 > 3 and select_thumbs_up:
+                  st.info('You have reached the maximum number of thumbs up for this restaurant')
+                  select_thumbs_up = False
+                  st.stop()
+
                db.modify_thumbs_up_in_db(rev, select_thumbs_up)
                db.modify_thumbs_down_in_db(rev, select_thumbs_down)
 
                db.modify_is_suggestion(rev, select_suggestion)
-               # modify label
-               # modify label before saving
+               
                select_label = '-'.join(select_label)
                db.modify_label_in_db(rev, select_label)
 
                st.success('Saved')
-               # add +1 to the index
-               index_to_modify += 1
-
-
-
-
-
-
-
-
-
-         
-
-
-
-
-
