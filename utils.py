@@ -336,6 +336,11 @@ def filter_only_ambience_related_reviews(df):
    ambience_df = df[df['sentiment'] != 'POSITIVE']
    ambience_df = ambience_df[ambience_df['keywords'].str.contains('|'.join(key_words_related_to_ambience))]
    ambience_df.index = range(1, len(ambience_df) + 1)
+   # get the negative with no keywords
+   ambience_df_no_keywords = df[(df['sentiment'] != 'POSITIVE') & (df['keywords'] == '') & (df['menu_item'] == '') \
+                                & (df['drink_item'] == '') & (df['details'] != '')]
+   ambience_df = pd.concat([ambience_df, ambience_df_no_keywords])
+   ambience_df.index = range(1, len(ambience_df) + 1)
    return ambience_df
 
 def filter_only_service_related_reviews(df):
