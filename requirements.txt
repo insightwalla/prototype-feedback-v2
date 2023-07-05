@@ -5,3 +5,4 @@ plotly
 numpy
 openpyxl
 streamlit-authenticator
+deep_translator
