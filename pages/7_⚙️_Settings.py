@@ -187,6 +187,9 @@ import pandas as pd
 
 from database import DBMenu, DBDrinks, DBProductKeywords, DBServiceKeywords, DBAmbienceKeywords
 if __name__ == '__main__':
+    # emoji for settings -> ⚙️
+    st.title('Settings ⚙️')
+    st.write('This page is intended for the admin to change the menu and keywords: ')
 
     db_menu_food = DBMenu()
     db_drinks_menu = DBDrinks()
@@ -194,7 +197,10 @@ if __name__ == '__main__':
     db_service_key_words = DBServiceKeywords()
     db_ambience = DBAmbienceKeywords()
 
-    col_food, col_drinks = st.columns(2)
+    expander_menu = st.expander('Menu')
+    # write description
+    expander_menu.write('This is the menu for food and drinks. You can add, delete and edit the menu items. You can also save the menu items to the database.')
+    col_food, col_drinks = expander_menu.columns(2)
 
     c1,c2,c3 = col_food.columns(3)
     button_delete = c2.button('Delete all')
@@ -218,7 +224,6 @@ if __name__ == '__main__':
 
 
     # drinks
-
     c1,c2,c3 = col_drinks.columns(3)
     button_delete = c2.button('Delete all (drinks)')
     if button_delete:
@@ -244,7 +249,10 @@ if __name__ == '__main__':
     # home icon is this -> 🏠 
     # a more informal is this -> 🏡 or this -> 🏚️ or this -> 🏘️ or this 
 
-    c1,c2,c3 = st.columns(3)
+    expander_keywords = st.expander('Product Keywords')
+    # when the Reviews contains one of this words will be classified as 'Product' related.
+    expander_keywords.write('This is the list of keywords that will be used to classify the reviews as **Product** related. You can add, delete and edit the keywords. You can also save the keywords to the database.')
+    c1,c2,c3 = expander_keywords.columns(3)
     button_delete = c2.button('Delete all (product keywords)')
     if button_delete:
         db_product_keywords.delete_all()
@@ -255,7 +263,7 @@ if __name__ == '__main__':
         db_product_keywords.populate_db(food_keywords)
 
 
-    menu_product_keywords = st.data_editor(db_product_keywords.view(as_df=True), num_rows='dynamic', use_container_width=True)
+    menu_product_keywords = expander_keywords.data_editor(db_product_keywords.view(as_df=True), num_rows='dynamic', use_container_width=True)
     button_save = c3.button('Save (product keywords)')
 
     if button_save:
@@ -266,8 +274,11 @@ if __name__ == '__main__':
         db_product_keywords.save_all(list_of_product_keywords)
 
     # service keywords
+    expander_service_keywords = st.expander('Service Keywords')
+    # when the Reviews contains one of this words will be classified as 'Service' related.
+    expander_service_keywords.write('This is the list of keywords that will be used to classify the reviews as **Service** related. You can add, delete and edit the keywords. You can also save the keywords to the database.')
 
-    c1,c2,c3 = st.columns(3)
+    c1,c2,c3 = expander_service_keywords.columns(3)
     button_delete = c2.button('Delete all (service keywords)')
     if button_delete:
         db_service_key_words.delete_all()
@@ -278,7 +289,7 @@ if __name__ == '__main__':
         db_service_key_words.populate_db(service_keywords)
 
 
-    menu_service_keywords = st.data_editor(db_service_key_words.view(as_df=True), num_rows='dynamic', use_container_width=True)
+    menu_service_keywords = expander_service_keywords.data_editor(db_service_key_words.view(as_df=True), num_rows='dynamic', use_container_width=True)
 
     button_save = c3.button('Save (service keywords)')
     if button_save:
@@ -289,8 +300,10 @@ if __name__ == '__main__':
         db_service_key_words.save_all(list_of_service_keywords)
 
     # ambience keywords
-
-    c1,c2,c3 = st.columns(3)
+    expander_ambience_keywords = st.expander('Ambience Keywords')
+    # when the Reviews contains one of this words will be classified as 'Ambience' related.
+    expander_ambience_keywords.write('This is the list of keywords that will be used to classify the reviews as **Ambience** related. You can add, delete and edit the keywords. You can also save the keywords to the database.')
+    c1,c2,c3 = expander_ambience_keywords.columns(3)
     button_delete = c2.button('Delete all (ambience keywords)')
     if button_delete:
         db_ambience.delete_all()
@@ -301,7 +314,7 @@ if __name__ == '__main__':
         db_ambience.populate_db(key_words_related_to_ambience)
 
 
-    menu_ambience_keywords = st.data_editor(db_ambience.view(as_df=True), num_rows='dynamic', use_container_width=True)
+    menu_ambience_keywords = expander_ambience_keywords.data_editor(db_ambience.view(as_df=True), num_rows='dynamic', use_container_width=True)
 
     button_save = c3.button('Save (ambience keywords)')
 
