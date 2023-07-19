@@ -324,11 +324,30 @@ class FeedBackHelper:
          st.stop()
       
       #6. Filter by restaurant name
-      restaurant_name = restaurant_container.selectbox('Restaurant Name', ['All'] + self.df['Reservation: Venue'].unique().tolist(), index = 0)
+            #6. Filter by restaurant name
+      res_to_rename = {
+            'Dishoom Covent Garden': 'D1',
+            'Dishoom Shoreditch': 'D2',
+            'Dishoom Kings Cross': 'D3',
+            'Dishoom Carnaby': 'D4',
+            'Dishoom Edinburgh': 'D5',
+            'Dishoom Kensington': 'D6',
+            'Dishoom Manchester': 'D7',
+            'Dishoom Birmingham': 'D8',
+            'Dishoom Canary Wharf': 'D9'
+        }
+      
+      restaurants_names = res_to_rename.values()
+      restaurants_names = ['All'] + list(restaurants_names)
+
+      restaurant_name = restaurant_container.selectbox('Restaurant Name', restaurants_names, index=0, key='restaurant_name')
       # PROCESSSING DATA
       if restaurant_name != 'All':
+         # get the name of the restaurant
+         restaurant_name = list(res_to_rename.keys())[list(res_to_rename.values()).index(restaurant_name)]
          name_choosen_db = 'pages/' + restaurant_name + '.db'
          self.df = pd.DataFrame(fetch_data_from_db(name=name_choosen_db), columns=['idx'] + Database_Manager.COLUMNS_FOR_CREATION)
+
 
       # 6.1. Split the dataframe in two, one with review and one without reviews
       self.df_with_review = self.df[self.df['Details'] != '']

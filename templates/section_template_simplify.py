@@ -52,7 +52,25 @@ class SectionTemplate:
         venues = venues.tolist()
         venues_dict = {venue: self.data[self.data['reservation_venue'] == venue] for venue in venues}
         
-        selected_restaurant = st.sidebar.selectbox('Select Restaurant', list(venues_dict.keys()))
+        res_to_rename = {
+                'Dishoom Covent Garden': 'D1',
+                'Dishoom Shoreditch': 'D2',
+                'Dishoom Kings Cross': 'D3',
+                'Dishoom Carnaby': 'D4',
+                'Dishoom Edinburgh': 'D5',
+                'Dishoom Kensington': 'D6',
+                'Dishoom Manchester': 'D7',
+                'Dishoom Birmingham': 'D8',
+                'Dishoom Canary Wharf': 'D9'
+            }
+        
+        restaurants_names = res_to_rename.values()
+        restaurants_names = list(restaurants_names)
+
+
+        selected_restaurant = st.sidebar.selectbox('Select Restaurant', restaurants_names)
+        selected_restaurant = [key for key, value in res_to_rename.items() if value == selected_restaurant][0]
+        
         st.subheader(f"**{selected_restaurant}**")
         self.name_db_choosen = f'pages/{selected_restaurant}.db'
         self.df_selected = get_data_from_database(Database_Manager(self.name_db_choosen))
