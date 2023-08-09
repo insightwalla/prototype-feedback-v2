@@ -154,7 +154,7 @@ def create_data_from_uploaded_file():
       # now we have to concat the two dfs
       df = pd.concat([df_not_empty, df_empty], ignore_index=True)
       # add the last five to the bar
-      my_bar.progress(100, text='All done')
+      my_bar.progress(100, text='')
       return df
       
 # main class
@@ -255,7 +255,6 @@ class FeedBackHelper:
       create_graph_for_month_analysis(final)
       
       create_container_for_each_sentiment(final)
-
 
     def run(self):
       '''
@@ -446,6 +445,9 @@ class FeedBackHelper:
          # get day part
          day_part = row['Day_Part']
          suggestion = row['Suggested to Friend']
+         # get food and drink
+         food = row['Menu Item']
+         drink = row['Drink Item']
 
          if st.checkbox('Translate to English', value = False, key = f'translate {index_to_modify}'):
             rev_original = row['Details']
@@ -515,8 +517,30 @@ class FeedBackHelper:
          c1,c2 = st.columns(2)
          select_sentiment =  c1.selectbox('Sentiment', ['POSITIVE', 'NEGATIVE', 'neutral'], index = index, key = f'i_{index_to_modify}', help = 'Select the sentiment for the review')
          select_label = c2.multiselect('Label', options_for_classification, default = label, key = f'l {rev}', help = 'Select the label for the review')
-         columns_rating = ['Overall Rating', 'Feedback: Food Rating', 'Feedback: Drink Rating', 'Feedback: Service Rating', 'Feedback: Ambience Rating']
+         all_food = DBMenu().view() # ->(1, Vada Pau), (2, ...)
+         all_drinks = DBDrinks().view()
+         only_food = [f[1] for f in all_food]
+         only_drinks = [d[1] for d in all_drinks]
 
+         if food == '' or food == ' ':
+            food = []
+         else:
+            food = food.split('-')
+            food = [l.strip() for l in food if l != '']
+            #st.write(food)
+
+         # same for drinks
+         if drink == '' or drink == ' ':
+            drink = []
+         else:
+            drink = drink.split('-')
+            drink = [l.strip() for l in drink if l != '']
+            #st.write(drink)
+
+         select_food = c1.multiselect('Food', only_food, default = food, key = f'f {rev}', help = 'Select the food items for the review')
+         select_drinks = c2.multiselect('Drinks', only_drinks, default = drink, key = f'd {rev}', help = 'Select the drinks items for the review')
+
+         columns_rating = ['Overall Rating', 'Feedback: Food Rating', 'Feedback: Drink Rating', 'Feedback: Service Rating', 'Feedback: Ambience Rating']
          columns_for_input = ['Overall', 'Food', 'Drink', 'Service', 'Ambience']
          columns_ = st.columns(len(columns_rating))
 
@@ -538,7 +562,8 @@ class FeedBackHelper:
 
 
          # now we need to save the data to the database
-         if st.button('Saving'):
+         c1,c2 = st.columns(2)
+         if c1.button('Saving', use_container_width=True):
                # get restaurant name
                restaurant_name = row['Reservation: Venue']
                name_choosen_db = 'pages/' + restaurant_name + '.db'
@@ -549,15 +574,17 @@ class FeedBackHelper:
                db.modify_service_rating_in_db(rev, results[3])
                db.modify_ambience_rating_in_db(rev, results[4])
                db.modify_sentiment_in_db(rev, select_sentiment)
-
+               db.modify_food_in_db(rev, '-'.join(select_food))
+               db.modify_drink_in_db(rev, '-'.join(select_drinks))
+               db.modify_label_in_db(rev, '-'.join(select_label))
                # we can have a max of 3 thumbs up and 3 thumbs down
                # get restaurant name
 
                restaurant_name = row['Reservation: Venue']
                number_of_thumbs_up_in_res = db.get_number_of_thumbs_up(restaurant_name)
                number_of_thumbs_down_in_res = db.get_number_of_thumbs_down(restaurant_name)
-               st.write(f'**Number of thumbs up in {restaurant_name}**: {number_of_thumbs_up_in_res}')
-               st.write(f'**Number of thumbs down in {restaurant_name}**: {number_of_thumbs_down_in_res}')
+               #st.write(f'**Number of thumbs up in {restaurant_name}**: {number_of_thumbs_up_in_res}')
+               #st.write(f'**Number of thumbs down in {restaurant_name}**: {number_of_thumbs_down_in_res}')
                
                if number_of_thumbs_down_in_res + 1 > 3 and select_thumbs_down:
                   st.info('You have reached the maximum number of thumbs down for this restaurant')
@@ -570,10 +597,13 @@ class FeedBackHelper:
 
                db.modify_thumbs_up_in_db(rev, select_thumbs_up)
                db.modify_thumbs_down_in_db(rev, select_thumbs_down)
-
                db.modify_is_suggestion(rev, select_suggestion)
-               
-               select_label = '-'.join(select_label)
-               db.modify_label_in_db(rev, select_label)
-
                st.success('Saved')
+
+         # delete the review
+         if c2.button('Delete', use_container_width=True):
+               # get restaurant name
+               restaurant_name = row['Reservation: Venue']
+               name_choosen_db = 'pages/' + restaurant_name + '.db'
+               db = Database_Manager(name_choosen_db)
+               db.delete_review(rev)

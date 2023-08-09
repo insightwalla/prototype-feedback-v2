@@ -6,8 +6,6 @@ def final_page(name_db: str, section: str, name_user: str):
 
     # need to get the data for each restaurant
     data = Database_Manager(name_db).get_main_db_from_venue()
-    with st.expander('View all data'):
-        st.write(data)
 
     # get unique venues
     list_of_venue = data['Reservation: Venue'].unique()
@@ -70,6 +68,8 @@ def final_page(name_db: str, section: str, name_user: str):
 
     # add a complete df 
     with st.expander('View all data'):
+        data = data.rename(columns={'Overall Rating': 'Overall', 'Feedback: Food Rating': 'Food', 'Feedback: Service Rating': 'Service', 'Feedback: Ambience Rating': 'Ambience',
+                                    'Feedback: Drink Rating': 'Drink'})
         st.write(data)
 
     # create a download link
@@ -84,7 +84,3 @@ def final_page(name_db: str, section: str, name_user: str):
 
 
     st.markdown(get_table_download_link(data), unsafe_allow_html=True)
-
-
-
-

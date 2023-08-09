@@ -519,6 +519,11 @@ class Database_Manager:
    def get_number_of_thumbs_down(self, restaurant):
       return self.run_query(f"SELECT COUNT(👎) FROM reviews WHERE 👎 = '1' AND reservation_venue = '{restaurant}'")[0][0]
    
+   def delete_review(self, review):
+      sql = "DELETE FROM reviews WHERE details = ?"
+      self.cur.execute(sql, (review,))
+      self.conn.commit()
+      
 if __name__ == "__main__":
    db = Database_Manager('/Users/robertoscalas/Desktop/demo_working_version/pages/reviews.db')
    db.delete_Table()
