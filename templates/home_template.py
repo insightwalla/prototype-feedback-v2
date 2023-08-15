@@ -559,7 +559,41 @@ class FeedBackHelper:
          # st.write(f'**Drink Rating**: {results[2]}')
          # st.write(f'**Service Rating**: {results[3]}')
          # st.write(f'**Ambience Rating**: {results[4]}')
+         from google_big_query import GoogleBigQuery, TransformationGoogleBigQuery
+         def get_sales_date(store_id, date, time = None):
+            
+            googleconnection = GoogleBigQuery()
 
+            query_for_only_a_date = f'''
+            SELECT *,
+               EXTRACT(MONTH FROM DateOfBusiness) AS Month
+               FROM `sql_server_on_rds.Dishoom_dbo_dpvHstCheckSummary`
+               WHERE DateOfBusiness = '{date}'
+                     AND FKStoreID IN ({','.join([str(i) for i in store_id])})
+            '''
+            df = googleconnection.query(query = query_for_only_a_date, as_dataframe = True)
+            fig, df = TransformationGoogleBigQuery(df, plot = True).transform()
+            # add vertical line on time
+            if time is not None:
+               fig.add_vline(x=time, line_width=10, line_color="red", opacity=0.3)
+            st.plotly_chart(fig) 
+
+         # venue need to go from the name to the id
+         venue_map = {
+            'Dishoom Covent Garden': 1,
+            'Dishoom Shoreditch': 2,
+            'Dishoom Kings Cross': 3,
+            'Dishoom Carnaby': 4,
+            'Dishoom Edinburgh': 5,
+            'Dishoom Kensington': 6,
+            'Dishoom Manchester': 7,
+            'Dishoom Birmingham': 8,
+            'Dishoom Canary Wharf': 9
+        }
+         # get the id from the name
+         store_id = venue_map[venue]
+         time = time if time != '' else None
+         get_sales_date(store_id= [store_id], date = date, time = time)   
 
          # now we need to save the data to the database
          c1,c2 = st.columns(2)
