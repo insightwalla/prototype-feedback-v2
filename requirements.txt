@@ -6,3 +6,5 @@ numpy
 openpyxl
 streamlit-authenticator
 deep_translator
+google-cloud-bigquery
+db-dtypes
