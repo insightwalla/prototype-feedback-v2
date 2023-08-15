@@ -147,7 +147,7 @@ class TransformationGoogleBigQuery:
         self.df = df
 
     def visualization(self):
-        percentage_ = st.checkbox('Show table occupancy %', value=True)
+        percentage_ = True
         df = self.df
         # for each of the days sum the covers
         unique_dates = df['DateOfBusiness'].unique()
