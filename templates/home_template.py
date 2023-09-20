@@ -189,6 +189,7 @@ class FeedBackHelper:
             df = create_data_from_uploaded_file()
             self.df = self.process_data(df)
             db.create_database_for_each_venue()
+        st.stop()
 
 
     def _preprocessing(self, data):
